@@ -1,15 +1,14 @@
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, JSONResponse
-import openai
+from openai import OpenAI
 import os
 import uuid
 import asyncio
 
 app = FastAPI()
 
-# Берём ключ из переменной окружения
-OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
-openai.api_key = OPENAI_API_KEY
+# Создаём клиент OpenAI через новый API
+client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY", ""))
 
 # Модели
 MODELS = {
@@ -17,7 +16,7 @@ MODELS = {
     "стандарт": "bebraAI-standard-1.0"
 }
 
-# Чаты: {chat_id: {"name": str, "model": str, "messages": [...]}}
+# Чаты
 chats = {}
 
 @app.get("/", response_class=HTMLResponse)
@@ -149,14 +148,14 @@ async def chat_send(chat_id: str, req: Request):
     chats[chat_id]["messages"].append({"role":"user","content":content})
 
     try:
-        # Асинхронный вызов OpenAI
-        reply = await asyncio.to_thread(lambda: openai.ChatCompletion.create(
+        # Новый API OpenAI
+        reply_obj = await asyncio.to_thread(lambda: client.chat.completions.create(
             model=MODELS.get(model,"bebraAI-mini-1.0"),
             messages=[{"role":m["role"],"content":m["content"]} for m in chats[chat_id]["messages"]],
             max_tokens=500
-        ).choices[0].message.content)
+        ))
+        reply = reply_obj.choices[0].message.content
     except Exception as e:
-        # Фоллбек, если ключ недействителен
         reply = f"Тестовый ответ (ключ недоступен или API не отвечает): {e}"
 
     chats[chat_id]["messages"].append({"role":"assistant","content":reply})
