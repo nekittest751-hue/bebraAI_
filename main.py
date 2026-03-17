@@ -1,13 +1,12 @@
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, JSONResponse
-from fastapi.staticfiles import StaticFiles
 import openai
 import os
 import uuid
 
 app = FastAPI()
 
-# Переменная окружения для ключа OpenAI
+# Берём API ключ из переменной окружения
 openai.api_key = os.environ.get("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", "")
 
 # Модели
@@ -16,11 +15,8 @@ MODELS = {
     "стандарт": "bebraAI-standard-1.0"
 }
 
-# Хранение чатов и их истории {chat_id: {"name": str, "model": str, "messages": [{"role":"user"/"assistant","content":str}]}}
+# Хранение чатов и их истории
 chats = {}
-
-# Статика для JS, CSS если нужно
-app.mount("/static", StaticFiles(directory="static"), name="static")
 
 @app.get("/", response_class=HTMLResponse)
 async def index():
@@ -124,7 +120,6 @@ async def index():
     </html>
     """
 
-# API для чатов
 @app.get("/chats")
 async def get_chats():
     return [{"id":cid, "name":c["name"]} for cid,c in chats.items()]
@@ -156,7 +151,6 @@ async def chat_send(chat_id: str, req: Request):
     model = data.get("model", "мини")
     content = data.get("content", "")
     chats[chat_id]["messages"].append({"role":"user","content":content})
-    # Вызов OpenAI
     response = openai.ChatCompletion.create(
         model=MODELS.get(model,"bebraAI-mini-1.0"),
         messages=[{"role":m["role"],"content":m["content"]} for m in chats[chat_id]["messages"]],
