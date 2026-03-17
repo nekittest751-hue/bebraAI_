@@ -7,7 +7,7 @@ import uuid
 app = FastAPI()
 
 # Берём API ключ из переменной окружения
-openai.api_key = os.environ.get("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", "")
+openai.api_key = os.environ.get("OPENAI_API_KEY", "")
 
 # Модели
 MODELS = {
