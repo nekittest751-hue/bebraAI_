@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+transformers
+torch
+requests
+datasets
+accelerate
+peft
+bitsandbytes
+safetensors
